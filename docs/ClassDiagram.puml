@@ -1,0 +1,69 @@
+@startuml test
+
+class Server {
+  - ServerSocket serverSocket
+  - ExecutorService pool
+  - BroadCaster BroadCaster
+  - int port
+  - boolean running
+  + start()
+  + shutdown()
+}
+
+class ClientHandler {
+  - Socket socket
+  - BroadCaster BroadCaster
+  - BlockingQueue outbox
+  - boolean running
+  - String nickname
+  + run()
+  + enqueue(message:String)
+}
+
+interface Runnable {}
+
+interface ExecutorService {}
+
+
+interface BroadCaster {
+  + register(client:ClientHandler)
+  + unregister(client:ClientHandler)
+  + broadcast(message:String)
+  + getSize() : int
+  + shutdown()
+}
+
+class BroadCasterImpl {
+  - Set<ClientHandler> clients
+  - boolean accepting
+  + register(client:ClientHandler)
+  + unregister(client:ClientHandler)
+  + broadcast(message:String)
+  + getSize() : int
+  + shutdown()
+}
+
+/'
+class Message {
+  + senderId:String
+  + content:String
+  + timestamp:long
+}
+'/
+
+class StringValidateUtil {
+  {static} + validateClientNickname() : boolean
+  {static} + validateQuitCommand() : boolean
+}
+
+Server "1" o-- "1" BroadCaster
+Server "1" o-- "1" ExecutorService : pool
+Server "1" ..> "many" ClientHandler : creates
+BroadCaster "1" o-- "*" ClientHandler
+/' ClientHandler ..> Message : uses '/
+
+Runnable <|.. ClientHandler
+BroadCaster <|.. BroadCasterImpl
+
+
+@enduml
